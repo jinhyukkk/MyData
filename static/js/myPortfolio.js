@@ -1,201 +1,203 @@
-// 엔터 키를 눌렀을 때 검색 버튼 클릭 이벤트 처리
-function handleEnterKeyPress(event) {
-    if (event.key === 'Enter') {
-        // 검색 버튼을 클릭
-        document.getElementById('searchBtn').click();
+class PortfolioManager {
+    constructor() {
+        this.loadingIndicator = document.getElementById('loadingIndicator');
+        this.krTableBody = document.getElementById('krTableBody');
+        this.usTableBody = document.getElementById('usTableBody');
+        this.jpTableBody = document.getElementById('jpTableBody');
+        this.searchBtn = document.getElementById('searchBtn');
+        this.addItemButton = document.getElementById('addItemButton');
+        this.inputBox = document.getElementById('inputBox');
+        this.closeButton = document.getElementById('closeButton');
+        this.stockForm = document.getElementById('stockForm');
+        this.toastContainer = document.getElementById('toast-container');
+
+        this.init();
     }
-}
 
+    init() {
+        this.bindEvents();
+        this.getMyPortfolio();
+    }
 
-// 검색 조회
-function getMyPortfolio() {
-    $('#tableBody').empty();
-    // 로딩 인디케이터 표시
-    loadingIndicator.style.display = 'block';
-    $.ajax({
-        url: "/api/myPortfolio",
-        type: "GET",
-        contentType: 'application/json',
-        success: function (response) {
-            if (response.message === 'Success') {
-                console.log(response.result)
-                setTableData(response.result);
-            } else if ($.isEmptyObject(response.result)) {
-                alert('결과가 없습니다.');
-            } else {
-                alert('조회 실패');
-            }
+    bindEvents() {
+        this.searchBtn.addEventListener('click', () => this.getMyPortfolio());
+        this.addItemButton.addEventListener('click', () => this.toggleInputBox());
+        this.closeButton.addEventListener('click', () => this.toggleInputBox(true));
+        this.stockForm.addEventListener('submit', (e) => this.addStock(e));
+        document.addEventListener('keydown', (e) => this.handleEnterKeyPress(e));
+    }
 
-            // 로딩 인디케이터 숨김
-            loadingIndicator.style.display = 'none';
-        },
-        error: function (error) {
-            // console.log("Error:", error);
-            // 로딩 인디케이터 숨김
-            loadingIndicator.style.display = 'none';
+    handleEnterKeyPress(event) {
+        if (event.key === 'Enter') {
+            this.searchBtn.click();
         }
-    });
-}
+    }
 
-function setTableData(data) {
-    // 테이블에 데이터 추가하기
-    var tableBody = document.getElementById('tableBody');
-    data.forEach(function (item) {
-        const row = tableBody.insertRow();
-        const stockNameCell = row.insertCell(0);
-        const quantityCell = row.insertCell(1);
-        const averagePriceCell = row.insertCell(2);
-        const currentPriceCell = row.insertCell(3);
-        const purchaseAmountCell = row.insertCell(4);
-        const valuationAmountCell = row.insertCell(5);
-        const profitAndLossCell = row.insertCell(6);
-        const returnRatioCell = row.insertCell(7);
-        const evaluationRatioCell = row.insertCell(8);
-        const actionsCell = row.insertCell(9);
+    getMyPortfolio() {
+        this.getPortfolioByNation('KR');
+        this.getPortfolioByNation('US');
+        this.getPortfolioByNation('JP');
+    }
 
-        stockNameCell.textContent = item.stockName;
-        quantityCell.textContent = item.quantity;
-        averagePriceCell.textContent = item.averagePrice;
-        currentPriceCell.textContent = item.currentPrice;
-        purchaseAmountCell.textContent = item.purchaseAmount;
-        valuationAmountCell.textContent = item.valuationAmount;
-        profitAndLossCell.textContent = item.profitAndLoss;
-        returnRatioCell.textContent = item.returnRatio;
-        evaluationRatioCell.textContent = item.evaluationRatio;
 
-        // 저장 버튼 추가
+    getPortfolioByNation(nation = 'KR') {
+        this.krTableBody.innerHTML = ''; // Clear existing table data
+        this.showLoadingIndicator();
+        const queryString = $.param({nation: nation, sort: 'sort'});
+        $.ajax({
+            url: "/api/myPortfolio",
+            type: "GET",
+            contentType: 'application/json',
+            data: queryString,
+            success: (response) => this.handlePortfolioResponse(response),
+            error: () => this.hideLoadingIndicator()
+        });
+    }
+
+
+
+    handlePortfolioResponse(response) {
+        if (response.message === 'Success') {
+            this.setTableData(response.result, response.nation);
+        } else if ($.isEmptyObject(response.result)) {
+            alert('결과가 없습니다.');
+        } else {
+            alert('조회 실패');
+        }
+        this.hideLoadingIndicator();
+    }
+
+    setTableData(data, nation) {
+        data.forEach((item) => {
+            let row = '';
+            if (nation === 'KR') {
+                row = this.krTableBody.insertRow();
+            } else if (nation === 'US') {
+                row = this.usTableBody.insertRow();
+            } else if (nation === 'JP') {
+                row = this.jpTableBody.insertRow();
+            }
+            this.createTableCells(row, item);
+        });
+    }
+
+    createTableCells(row, item) {
+        const cellValues = [
+            item.stockName, item.quantity, item.averagePrice,
+            item.currentPrice, item.purchaseAmount, item.valuationAmount,
+            item.profitAndLoss, item.returnRatio, item.evaluationRatio
+        ];
+
+        cellValues.forEach((value) => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+        });
+
+        this.createActionButton(row, item);
+    }
+
+    createActionButton(row, item) {
+        const actionsCell = row.insertCell();
         const saveButton = document.createElement('button');
         saveButton.type = 'button';
-        saveButton.textContent = '저장';
-        saveButton.addEventListener('click', function () {
-            // 저장 버튼 클릭 시 실행할 코드
-            const row = $(this).closest('tr');
-
-            // 각 셀 (td) 의 내용을 변수에 저장합니다.
-            const stockName = row.find('td:eq(0)').text();
-            const quantity = row.find('td:eq(1)').text();
-            const averagePrice = row.find('td:eq(2)').text();
-            const currentPrice = row.find('td:eq(3)').text();
-            const purchaseAmount = row.find('td:eq(4)').text();
-            const valuationAmount = row.find('td:eq(5)').text();
-            const profitAndLoss = row.find('td:eq(6)').text();
-            const returnRatio = row.find('td:eq(7)').text();
-            const evaluationRatio = row.find('td:eq(8)').text();
-
-            $.ajax({
-                url: '/api/myPortfolio',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    stockName: stockName,
-                    quantity: quantity,
-                    averagePrice: averagePrice,
-                    currentPrice: currentPrice,
-                    purchaseAmount: purchaseAmount,
-                    valuationAmount: valuationAmount,
-                    profitAndLoss: profitAndLoss,
-                    returnRatio: returnRatio,
-                    evaluationRatio: evaluationRatio
-                }),
-                success: function (response) {
-                    showToast(response.message);
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error:', error);
-                    alert('저장에 실패했습니다.');
-                }
-            });
-        });
+        saveButton.textContent = '삭제';
+        saveButton.id = item.idx;
+        saveButton.addEventListener('click', () => this.handleDeleteButtonClick(row));
 
         actionsCell.appendChild(saveButton);
-    });
-}
+    }
 
-function showToast(message) {
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerText = message;
-
-    const container = document.getElementById('toast-container');
-    container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.classList.add('show');
-    });
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-        // Remove the element from the DOM after animation ends
-        toast.addEventListener('animationend', () => {
-            toast.remove();
-        });
-    }, 3000);
-}
-
-// scripts.js
-document.addEventListener("DOMContentLoaded", () => {
-    const searchBtn = document.getElementById("searchBtn");
-    const toggleButton = document.getElementById("toggleButton");
-    const inputBox = document.getElementById("inputBox");
-    const closeButton = document.getElementById("closeButton");
-    const stockForm = document.getElementById("stockForm");
-
-    searchBtn.addEventListener("click", () => {
-        getMyPortfolio();
-    });
-
-    toggleButton.addEventListener("click", () => {
-        if (inputBox.classList.contains("hidden")) {
-            inputBox.classList.remove("hidden");
-        } else {
-            inputBox.classList.add("hidden");
+    // 삭제 API
+    handleDeleteButtonClick(row) {
+        if (!confirm("삭제하시겠습니까?")) {
+            return false;
         }
-    });
 
-    closeButton.addEventListener("click", () => {
-        inputBox.classList.add("hidden");
-    });
+        const button = event.target;
+        const idx = button.id;
 
-    stockForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        // FormData 객체 생성
-        const formData = new FormData(stockForm);
-        // FormData를 JSON으로 변환
+        $.ajax({
+            url: '/api/myPortfolio',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({idx: idx}),
+            success: (response) => {
+                if (response.message === 'Success') {
+                    this.getMyPortfolio();
+                } else {
+                    alert('실패했습니다.');
+                }
+            },
+            error: (xhr, status, error) => {
+                console.error('Error:', error);
+                alert('실패했습니다.');
+            }
+        });
+    }
+
+    addStock(event) {
+        event.preventDefault();
+
+        const formData = new FormData(this.stockForm);
         const jsonObject = {};
         formData.forEach((value, key) => {
             jsonObject[key] = value;
         });
 
         $.ajax({
-        url: "/api/myPortfolio",
-        type: "POST",
-        contentType: 'application/json',
-                data: JSON.stringify(jsonObject),
-        success: function (response) {
-            if (response.message === 'Success') {
-                console.log(response.result)
-                getMyPortfolio();
-            } else if ($.isEmptyObject(response.result)) {
-                alert('결과가 없습니다.');
-            } else {
-                alert('조회 실패');
-            }
+            url: "/api/myPortfolio",
+            type: "POST",
+            contentType: 'application/json',
+            data: JSON.stringify(jsonObject),
+            success: (response) => {
+                if (response.message === 'Success') {
+                    this.getMyPortfolio();
+                } else if ($.isEmptyObject(response.result)) {
+                    alert('결과가 없습니다.');
+                } else {
+                    alert('조회 실패');
+                }
+                this.hideLoadingIndicator();
+            },
+            error: () => this.hideLoadingIndicator()
+        });
 
-            // 로딩 인디케이터 숨김
-            loadingIndicator.style.display = 'none';
-        },
-        error: function (error) {
-            // console.log("Error:", error);
-            // 로딩 인디케이터 숨김
-            loadingIndicator.style.display = 'none';
+        this.toggleInputBox(true);
+    }
+
+    toggleInputBox(hide = false) {
+        if (hide) {
+            this.inputBox.classList.add('hidden');
+            this.addItemButton.classList.remove('hidden');
+        } else {
+            this.inputBox.classList.toggle('hidden');
+            this.addItemButton.classList.toggle('hidden');
         }
-    });
+    }
 
+    showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerText = message;
 
-        // alert(`Saved: ${userInput}`);
-        // 실제로 데이터를 저장하려면 AJAX 요청 등을 추가할 수 있습니다.
-        inputBox.classList.add("hidden");
-    });
-});
+        this.toastContainer.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            toast.addEventListener('animationend', () => toast.remove());
+        }, 3000);
+    }
+
+    showLoadingIndicator() {
+        this.loadingIndicator.style.display = 'block';
+    }
+
+    hideLoadingIndicator() {
+        this.loadingIndicator.style.display = 'none';
+    }
+}
+
+// Initialize the PortfolioManager when the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", () => new PortfolioManager());

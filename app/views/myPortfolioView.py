@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, jsonify
-from app.services.myPortfolioService import get_my_portfolio, add_my_portfolio
+from app.services.myPortfolioService import get_my_portfolio, add_my_portfolio, delete_my_portfolio
 
 
 # 블루프린트 정의
@@ -15,7 +15,8 @@ def myPortfolio():
 @my_portfolio_bp.route('/api/myPortfolio', methods=['GET'])
 def get():
     try:
-        return jsonify({'message': 'Success', 'result': get_my_portfolio()}), 200
+        result, nation = get_my_portfolio()
+        return jsonify({'message': 'Success', 'result': result, 'nation': nation}), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
@@ -26,11 +27,14 @@ def post():
         return jsonify({'message': 'Success', 'result': add_my_portfolio()}), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
-#
-#
-# @my_portfolio_bp.route('/api/myPortfolio', methods=['DELETE'])
-# def delete():
-#     return deletePublicStock()
+
+
+@my_portfolio_bp.route('/api/myPortfolio', methods=['DELETE'])
+def delete():
+    try:
+        return jsonify({'message': 'Success', 'result': delete_my_portfolio()}), 200
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 #
 #
 # @my_portfolio_bp.route('/api/downloadExcel', methods=['GET'])

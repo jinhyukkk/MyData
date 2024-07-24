@@ -8,9 +8,18 @@ from app import db
 from app.models.publicStockModel import PublicStock
 from bs4 import BeautifulSoup
 from datetime import datetime
+import ssl
+from urllib3 import PoolManager
+
+# Create a custom SSL context
+context = ssl.create_default_context()
+context.set_ciphers('HIGH:!DH:!aNULL')
+
+# Create a PoolManager with the custom SSL context
+http = PoolManager(ssl_context=context)
 
 # SSL 연결 설정 변경
-requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
+# requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
 
 
 def add_public_stock():
