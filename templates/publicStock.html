@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Document</title>
+    <link href="../static/css/reset.css" rel="stylesheet"/>
+    <link href="../static/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="loading-indicator" id="loadingIndicator">Loading...</div>
+<div class="top_con">
+    <div class="wrapper">
+        <p class="tit">공모주</p>
+        <div class="search_box">
+            <input type="text" id="searchText" placeholder="검색어를 입력해주세요." onkeypress="handleEnterKeyPress(event)"/>
+            <button type="button" id="searchBtn"><img src="../static/images/search_icon.svg" alt=""/></button>
+        </div>
+    </div>
+</div>
+
+<div class="bottom_con wrapper">
+    <div class="top_tit">
+        <p class="search_tit left"><span class="search_text" id="searchTitle"></span><span class="text">검색결과</span></p>
+        <div class="btn_box right">
+            <button id="moveKeywordPage" type="button">주식정보수집</button>
+            <button id="getPublicStocks" type="button">공모주검색</button>
+        </div>
+    </div>
+    <div id="toast-container"></div>
+    <div class="table_box">
+        <table>
+            <thead>
+            <tr>
+                <th>종목명</th>
+                <th>청약일</th>
+                <th>환불일</th>
+                <th>상장일</th>
+                <th>공모가</th>
+                <th>기관수요예측</th>
+                <th>주관사</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            <!--
+            <tr>
+              <td>가게명들어가는자리</td>
+              <td>5</td>
+              <td>123</td>
+              <td>
+                <button type="button">저장</button>
+              </td>
+            </tr>
+            -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="../static/js/publicStock.js"></script>
+</body>
+</html>

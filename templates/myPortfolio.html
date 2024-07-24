@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Document</title>
+    <link href="../static/css/reset.css" rel="stylesheet"/>
+    <link href="../static/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="loading-indicator" id="loadingIndicator">Loading...</div>
+<div class="top_con">
+    <div class="wrapper">
+        <p class="tit">포트폴리오</p>
+        <div class="search_box">
+            <input type="text" id="searchText" placeholder="검색어를 입력해주세요." onkeypress="handleEnterKeyPress(event)"/>
+            <button type="button" id="searchBtn"><img src="../static/images/search_icon.svg" alt=""/></button>
+        </div>
+    </div>
+</div>
+<div class="custom-input-container">
+    <button id="toggleButton">종목 추가</button>
+
+    <div id="inputBox" class="input-box hidden">
+        <form id="stockForm">
+            <label for="nationSelect">국가:</label>
+            <select id="nationSelect" name="nation">
+                <option value="KR">한국</option>
+                <option value="US">미국</option>
+                <option value="JP">일본</option>
+            </select><br>
+            <label for="stockName">종목명:</label>
+            <input type="text" id="stockName" name="stockName"><br>
+            <label for="code">종목코드:</label>
+            <input type="text" id="code" name="code"><br>
+            <label for="quantity">보유수량:</label>
+            <input type="text" id="quantity" name="quantity"><br>
+            <label for="averagePrice">평균단가:</label>
+            <input type="text" id="averagePrice" name="averagePrice"><br>
+            <label for="currentPrice">현재가:</label>
+            <input type="text" id="currentPrice" name="currentPrice"><br>
+            <button type="submit">Save</button>
+            <button type="button" id="closeButton">Close</button>
+        </form>
+    </div>
+</div>
+<div class="bottom_con wrapper">
+    <div class="top_tit">
+        <p class="search_tit left"><span class="search_text" id="searchTitle"></span><span class="text">검색결과</span></p>
+        <div class="btn_box right">
+            <button id="moveKeywordPage" type="button">주식정보수집</button>
+        </div>
+    </div>
+    <div id="toast-container"></div>
+    <div class="table_box">
+        <table>
+            <thead>
+            <tr>
+                <th>종목명</th>
+                <th>보유수량</th>
+                <th>평균단가</th>
+                <th>현재가</th>
+                <th>매입금액</th>
+                <th>평가금액</th>
+                <th>평가손익</th>
+                <th>수익률</th>
+                <th>보유비중</th>
+                <th>관리</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="../static/js/myPortfolio.js"></script>
+</body>
+</html>
