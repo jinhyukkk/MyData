@@ -1,6 +1,7 @@
 class PortfolioManager {
     constructor() {
         this.loadingIndicator = document.getElementById('loadingIndicator');
+        this.exTbody = document.getElementById('exTbody');
         this.krTableBody = document.getElementById('krTableBody');
         this.usTableBody = document.getElementById('usTableBody');
         this.jpTableBody = document.getElementById('jpTableBody');
@@ -17,6 +18,7 @@ class PortfolioManager {
     init() {
         this.bindEvents();
         this.getMyPortfolio();
+        this.getExchangeRates();
     }
 
     bindEvents() {
@@ -33,6 +35,87 @@ class PortfolioManager {
         }
     }
 
+    getExchangeRates() {
+        $.ajax({
+            url: "/api/exchangeRates",
+            type: "GET",
+            contentType: 'application/json',
+            success: (response) => this.handleExchangeRatesResponse(response),
+            error: () => this.hideLoadingIndicator()
+        });
+    }
+
+    handleExchangeRatesResponse(response) {
+        if (response.message === 'Success') {
+            this.setExTableData(response.result);
+        } else if ($.isEmptyObject(response.result)) {
+            alert('환율 조회 결과가 없습니다.');
+        } else {
+            alert('환율 조회 실패');
+        }
+        this.hideLoadingIndicator();
+    }
+
+    setExTableData(data) {
+        data.forEach((item) => {
+            let row = this.exTbody.insertRow();
+            this.createExTableCells(row, item);
+        });
+    }
+
+    createExTableCells(row, item) {
+        const cellValues = [
+            item.stockName, item.quantity, item.averagePrice,
+            item.currentPrice, item.purchaseAmount, item.valuationAmount,
+            item.profitAndLoss, item.returnRatio, item.evaluationRatio
+        ];
+
+        cellValues.forEach((value) => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+        });
+
+        this.createExActionButton(row, item);
+    }
+
+    createExActionButton(row, item) {
+        const actionsCell = row.insertCell();
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.textContent = '삭제';
+        saveButton.id = item.idx;
+        saveButton.addEventListener('click', () => this.handleExDeleteButtonClick(row));
+
+        actionsCell.appendChild(saveButton);
+    }
+
+    // 삭제 API
+    handleExDeleteButtonClick(row) {
+        if (!confirm("삭제하시겠습니까?")) {
+            return false;
+        }
+
+        const button = event.target;
+        const idx = button.id;
+
+        $.ajax({
+            url: '/api/exchangeRates',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({idx: idx}),
+            success: (response) => {
+                if (response.message === 'Success') {
+                    this.getMyPortfolio();
+                } else {
+                    alert('실패했습니다.');
+                }
+            },
+            error: (xhr, status, error) => {
+                console.error('Error:', error);
+                alert('실패했습니다.');
+            }
+        });
+    }
     getMyPortfolio() {
         this.getPortfolioByNation('KR');
         this.getPortfolioByNation('US');
@@ -53,7 +136,6 @@ class PortfolioManager {
             error: () => this.hideLoadingIndicator()
         });
     }
-
 
 
     handlePortfolioResponse(response) {

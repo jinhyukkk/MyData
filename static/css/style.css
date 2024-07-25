@@ -313,3 +313,20 @@ display: block;
     background-color: #f44336;
     color: white;
 }
+
+/* 환율 정보 및 계좌 정보 테이블 스타일링 */
+/* 메인 콘텐츠와 사이드 콘텐츠를 배치하기 위한 Flexbox 설정 */
+.main_content {
+    display: flex;
+    gap: 20px; /* 사이드 콘텐츠와 메인 콘텐츠 간의 간격 */
+}
+
+.side_content {
+    flex: 1; /* 사이드 콘텐츠가 남는 공간을 차지하도록 설정 */
+    min-width: 200px; /* 사이드 콘텐츠의 최소 너비 설정 */
+}
+
+.stock_table {
+    flex: 3; /* 한국 테이블이 사이드 콘텐츠보다 넓게 설정 */
+    overflow-x: auto; /* 가로 스크롤 가능 */
+}
