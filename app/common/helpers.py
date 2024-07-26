@@ -35,6 +35,7 @@ def format_currency_by_code(number, countryCode):
     :param currency_code: 통화 코드 (예: 'USD', 'EUR', 'JPY')
     :return: 포맷팅된 통화 문자열
     """
+    print(number, countryCode)
     # 국가 코드로 통화 코드를 가져온다
     currencyCode = country_to_currency.get(countryCode, '')
 

@@ -2,6 +2,7 @@ class PortfolioManager {
     constructor() {
         this.loadingIndicator = document.getElementById('loadingIndicator');
         this.exTbody = document.getElementById('exTbody');
+        this.accountTbody = document.getElementById('accountTbody');
         this.krTableBody = document.getElementById('krTableBody');
         this.usTableBody = document.getElementById('usTableBody');
         this.jpTableBody = document.getElementById('jpTableBody');
@@ -17,8 +18,9 @@ class PortfolioManager {
 
     init() {
         this.bindEvents();
-        this.getMyPortfolio();
-        this.getExchangeRates();
+        this.getMyPortfolio();      //포트폴리오
+        this.getExchangeRates();    //환율
+        this.getMyAccount();        //계좌
     }
 
     bindEvents() {
@@ -66,9 +68,12 @@ class PortfolioManager {
     createExTableCells(row, item) {
         const cellValues = [item.targetCurrency, item.exchangeRate];
 
-        cellValues.forEach((value) => {
+        cellValues.forEach((value, index) => {
             const cell = row.insertCell();
             cell.textContent = value;
+            if (index === 1) {
+                cell.style.textAlign = 'right';
+            }
         });
 
         this.createExActionButton(row, item);
@@ -87,6 +92,86 @@ class PortfolioManager {
 
     // 삭제 API
     handleExDeleteButtonClick(row) {
+        if (!confirm("삭제하시겠습니까?")) {
+            return false;
+        }
+
+        const button = event.target;
+        const idx = button.id;
+
+        $.ajax({
+            url: '/api/exchangeRates',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({idx: idx}),
+            success: (response) => {
+                if (response.message === 'Success') {
+                    this.getMyPortfolio();
+                } else {
+                    alert('실패했습니다.');
+                }
+            },
+            error: (xhr, status, error) => {
+                console.error('Error:', error);
+                alert('실패했습니다.');
+            }
+        });
+    }
+    getMyAccount() {
+        $.ajax({
+            url: "/api/myAccount",
+            type: "GET",
+            contentType: 'application/json',
+            success: (response) => this.handleMyAccountResponse(response),
+            error: () => this.hideLoadingIndicator()
+        });
+    }
+
+    handleMyAccountResponse(response) {
+        if (response.message === 'Success') {
+            this.setAccountTbodyData(response.result);
+        } else if ($.isEmptyObject(response.result)) {
+            alert('계좌 조회 결과가 없습니다.');
+        } else {
+            alert('계좌 조회 실패');
+        }
+        this.hideLoadingIndicator();
+    }
+
+    setAccountTbodyData(data) {
+        data.forEach((item) => {
+            let row = this.accountTbody.insertRow();
+            this.createAccountTbodyCells(row, item);
+        });
+    }
+
+    createAccountTbodyCells(row, item) {
+        const cellValues = [item.title, item.amount, item.currency];
+
+        cellValues.forEach((value, index) => {
+            const cell = row.insertCell();
+            cell.textContent = value;
+            if (index === 1) {
+                cell.style.textAlign = 'right';
+            }
+        });
+
+        this.createAccountActionButton(row, item);
+    }
+
+    createAccountActionButton(row, item) {
+        const actionsCell = row.insertCell();
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.textContent = '삭제';
+        saveButton.id = item.idx;
+        saveButton.addEventListener('click', () => this.handleAccountDeleteButtonClick(row));
+
+        actionsCell.appendChild(saveButton);
+    }
+
+    // 삭제 API
+    handleAccountDeleteButtonClick(row) {
         if (!confirm("삭제하시겠습니까?")) {
             return false;
         }

@@ -31,5 +31,5 @@ class MyAccounts(db.Model):
     idx = Column(Integer, primary_key=True, autoincrement=True)     # 인덱스
     title = Column(String(30), nullable=False)                      # 계좌 제목
     currency = Column(String(3), nullable=False)                    # 계좌의 통화 (예: KRW)
-    balance = Column(DECIMAL(16, 2), nullable=False)                # 계좌의 현재 잔액
+    amount = Column(DECIMAL(16, 2), nullable=False)                # 계좌의 현재 잔액
     lastUpdated = Column(DateTime, server_default=func.now(), onupdate=func.now())    # 업데이트된 시간

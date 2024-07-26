@@ -130,7 +130,7 @@ def delete_my_portfolio():
 
 
 def get_exchange_rates():
-    exchange_rates = ExchangeRate.query.all()
+    exchangeRates = ExchangeRate.query.all()
 
     output = [
         {
@@ -139,7 +139,22 @@ def get_exchange_rates():
             'targetCurrency': result.targetCurrency,
             'exchangeRate': format_currency_by_code(adjust_price(result.exchangeRate, 'US'), 'KR')
         }
-        for result in exchange_rates
+        for result in exchangeRates
+    ]
+
+    return output
+
+def get_my_account():
+    myAccount = MyAccounts.query.all()
+
+    output = [
+        {
+            'idx': result.idx,
+            'title': result.title,
+            'currency': result.currency,
+            'amount': format_currency_by_code(adjust_price(result.amount, result.currency[:-1]), result.currency[:-1])
+        }
+        for result in myAccount
     ]
 
     return output
