@@ -64,11 +64,7 @@ class PortfolioManager {
     }
 
     createExTableCells(row, item) {
-        const cellValues = [
-            item.stockName, item.quantity, item.averagePrice,
-            item.currentPrice, item.purchaseAmount, item.valuationAmount,
-            item.profitAndLoss, item.returnRatio, item.evaluationRatio
-        ];
+        const cellValues = [item.targetCurrency, item.exchangeRate];
 
         cellValues.forEach((value) => {
             const cell = row.insertCell();
@@ -170,9 +166,12 @@ class PortfolioManager {
             item.profitAndLoss, item.returnRatio, item.evaluationRatio
         ];
 
-        cellValues.forEach((value) => {
+        cellValues.forEach((value, index) => {
             const cell = row.insertCell();
             cell.textContent = value;
+            if (index !== 0) {
+                cell.style.textAlign = 'right';
+            }
         });
 
         this.createActionButton(row, item);

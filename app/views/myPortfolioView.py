@@ -13,7 +13,7 @@ def myPortfolio():
 
 
 @my_portfolio_bp.route('/api/myPortfolio', methods=['GET'])
-def get():
+def getMyPortfolio():
     try:
         result, nation = get_my_portfolio()
         return jsonify({'message': 'Success', 'result': result, 'nation': nation}), 200
@@ -22,7 +22,7 @@ def get():
 
 
 @my_portfolio_bp.route('/api/myPortfolio', methods=['POST'])
-def post():
+def postMyPortfolio():
     try:
         return jsonify({'message': 'Success', 'result': add_my_portfolio()}), 200
     except Exception as e:
@@ -30,7 +30,7 @@ def post():
 
 
 @my_portfolio_bp.route('/api/myPortfolio', methods=['DELETE'])
-def delete():
+def deleteMyPortfolio():
     try:
         return jsonify({'message': 'Success', 'result': delete_my_portfolio()}), 200
     except Exception as e:
@@ -38,7 +38,7 @@ def delete():
 
 
 @my_portfolio_bp.route('/api/exchangeRates', methods=['GET'])
-def get():
+def getExchangeRates():
     try:
         result = get_exchange_rates()
         return jsonify({'message': 'Success', 'result': result}), 200

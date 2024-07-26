@@ -1,20 +1,30 @@
+from datetime import datetime
+
 from flask import request, jsonify
 from app import db
-from app.models.myPortfolioModel import MyPortfolio
-from app.common.helpers import format_currency_by_code, format_percent
-from sqlalchemy import func, desc, literal_column
+from app.models.myPortfolioModel import *
+from app.common.helpers import *
+from sqlalchemy import func, desc, literal_column, and_
 
 
 def get_my_portfolio():
+    # FROM
     queryResults = MyPortfolio.query
-    # 수익률 정렬
-    # .order_by(
-    #     desc((func.coalesce(MyPortfolio.currentPrice, 0) / func.coalesce(MyPortfolio.averagePrice, 1) - 1) * 100)))
 
+    # 국가별 조건
     nation = request.args.get('nation', '')
+    exchangeRates = 1
     if nation:
         queryResults = queryResults.filter(MyPortfolio.nation == nation)
+        currencyCode = country_to_currency.get(nation, '')
+        exchangeRatesQuery = ExchangeRate.query.filter(
+            and_(ExchangeRate.baseCurrency == 'KRW', ExchangeRate.targetCurrency == currencyCode)).limit(1).all()
+        if exchangeRatesQuery:
+            exchangeRates = exchangeRatesQuery[0].exchangeRate
+        if nation == 'JP':
+            exchangeRates /= 100
 
+    # 정렬
     sort = request.args.get('sort', '')
     if sort:
         # MyPortfolio 모델의 유효한 속성인지 확인
@@ -24,6 +34,7 @@ def get_my_portfolio():
             else:
                 queryResults = queryResults.order_by(getattr(MyPortfolio, sort).desc())
 
+    # SELECT, ORDER BY
     queryResults = queryResults.with_entities(
         MyPortfolio.idx,
         MyPortfolio.stockName,
@@ -39,10 +50,6 @@ def get_my_portfolio():
         ((MyPortfolio.quantity * MyPortfolio.currentPrice) / 100000000 * 100).label('evaluationRatio'),
     ).order_by(desc((MyPortfolio.quantity * MyPortfolio.currentPrice) / 100000000 * 100)).all()
 
-    # 국가에 따른 포맷 변경 여부를 결정
-    def adjust_price(value, nation):
-        return int(value) if nation in ['KR', ''] else value
-
     # 데이터 가공 및 포맷팅
     output = [
         {
@@ -52,15 +59,32 @@ def get_my_portfolio():
             'quantity': result.quantity,
             'averagePrice': format_currency_by_code(adjust_price(result.averagePrice, result.nation), result.nation),
             'currentPrice': format_currency_by_code(adjust_price(result.currentPrice, result.nation), result.nation),
-            'purchaseAmount': format_currency_by_code(adjust_price(result.purchaseAmount, result.nation), result.nation),
-            'valuationAmount': format_currency_by_code(adjust_price(result.valuationAmount, result.nation), result.nation),
-            'profitAndLoss': format_currency_by_code(adjust_price(result.profitAndLoss, result.nation), result.nation),
+            'purchaseAmount':
+                format_currency_by_code(
+                    adjust_price(
+                        result.purchaseAmount * exchangeRates, 'KR'
+                    ),
+                    'KR'
+                ),
+            'valuationAmount':
+                format_currency_by_code(
+                    adjust_price(
+                        result.valuationAmount * exchangeRates, 'KR'
+                    ),
+                    'KR'
+                ),
+            'profitAndLoss':
+                format_currency_by_code(
+                    adjust_price(
+                        result.profitAndLoss * exchangeRates, 'KR'
+                    ),
+                    'KR'
+                ),
             'returnRatio': format_percent(result.returnRatio),
             'evaluationRatio': format_percent(result.evaluationRatio)
         }
         for result in queryResults
     ]
-
     return output, nation
 
 
@@ -104,12 +128,18 @@ def delete_my_portfolio():
         db.session.rollback()
     return "Deleted successfully"
 
-def get_exchange_rates():
-    data = request.get_json()
-    if 'idx' not in data:
-        return jsonify(
-            {"message": "IDX not provided"}
-        )
 
-    idx_to_delete = int(data['idx'])
-    return data
+def get_exchange_rates():
+    exchange_rates = ExchangeRate.query.all()
+
+    output = [
+        {
+            'idx': result.idx,
+            'baseCurrency': result.baseCurrency,
+            'targetCurrency': result.targetCurrency,
+            'exchangeRate': format_currency_by_code(adjust_price(result.exchangeRate, 'US'), 'KR')
+        }
+        for result in exchange_rates
+    ]
+
+    return output
